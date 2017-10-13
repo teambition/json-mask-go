@@ -9,8 +9,6 @@ var (
 	ErrEmptyString = errors.New("empty string")
 )
 
-var terminalsMap = map[string]int{",": 1, "/": 2, "(": 3, ")": 4}
-
 type valueType int
 
 const (
@@ -20,25 +18,27 @@ const (
 
 const keyAny = "*"
 
-// Node represents a grammar node.
-type Node struct {
+// node represents a grammar node.
+type node struct {
 	key   string
 	typ   valueType
-	props []Node
+	props nodeMap
 }
 
 type token struct {
 	tag   string
 	value string
+	node
 }
 
-// Compile compiles the given mask text to the json mask nodes.
-func Compile(text string) ([]Node, error) {
+type nodeMap map[string]node
+
+func compile(text string) (nodeMap, error) {
 	if text == "" {
 		return nil, errors.WithStack(ErrEmptyString)
 	}
 
-	return nil, nil
+	return parse(scan([]rune(text))), nil
 }
 
 func scan(text []rune) []token {
@@ -70,4 +70,61 @@ func scan(text []rune) []token {
 	maybePush()
 
 	return tokens
+}
+
+func parse(tokens []token) nodeMap {
+	return buildTree(tokens, token{}, []token{})
+}
+
+func buildTree(tokens []token, parsent token, stack []token) nodeMap {
+	var t token
+	var props nodeMap
+
+	for {
+		if len(tokens) == 0 {
+			break
+		}
+
+		t, tokens = tokens[0], tokens[1:]
+
+		if t.tag == "_n" {
+			t.typ = typeObject
+			t.props = buildTree(tokens, t, stack)
+
+			if len(stack) != 0 {
+				peek := stack[len(stack)-1]
+				if peek.tag == "/" {
+					stack = stack[0 : len(stack)-1]
+					addToken(t, props)
+					return props
+				}
+			}
+		} else if t.tag == "," {
+			return props
+		} else if t.tag == "(" {
+			stack = append(stack, t)
+			parsent.typ = typeArray
+			continue
+		} else if t.tag == ")" {
+			stack = stack[0 : len(stack)-1]
+			return props
+		} else if t.tag == "/" {
+			stack = append(stack, t)
+			continue
+		}
+
+		addToken(t, props)
+	}
+
+	return props
+}
+
+func addToken(t token, props nodeMap) {
+	n := node{typ: t.typ}
+
+	if t.props != nil {
+		n.props = t.props
+	}
+
+	props[t.value] = n
 }

@@ -6,35 +6,41 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var tests = map[string][]Node{
-	"a": []Node{
-		Node{key: "a", typ: typeObject},
+var tests = map[string]nodeMap{
+	"a": nodeMap{
+		"a": node{typ: typeObject},
 	},
-	"a,b,c": []Node{
-		Node{key: "a", typ: typeObject},
-		Node{key: "b", typ: typeObject},
-		Node{key: "c", typ: typeObject},
+	"a,b,c": nodeMap{
+		"a": node{typ: typeObject},
+		"b": node{typ: typeObject},
+		"c": node{typ: typeObject},
 	},
-	"a/*/c": []Node{
-		Node{key: "a", typ: typeObject, props: []Node{
-			Node{
-				key:   keyAny,
-				typ:   typeObject,
-				props: []Node{Node{key: "c", typ: typeObject}},
+	"a/*/c": nodeMap{
+		"a": node{
+			typ: typeObject,
+			props: nodeMap{
+				keyAny: node{
+					typ: typeObject, props: nodeMap{"c": node{typ: typeObject}},
+				},
 			},
-		}},
+		},
 	},
-	"a,b(d/*/g,b),c": []Node{
-		Node{key: "a", typ: typeObject},
-		Node{key: "b", typ: typeArray, props: []Node{
-			Node{key: "d", typ: typeObject, props: []Node{
-				Node{key: keyAny, typ: typeObject, props: []Node{
-					Node{key: "g", typ: typeObject},
+	"a,b(d/*/g,b),c": nodeMap{
+		"a": node{typ: typeObject},
+		"b": node{
+			typ: typeArray,
+			props: nodeMap{
+				"d": node{typ: typeObject, props: nodeMap{
+					keyAny: node{
+						typ: typeObject,
+						props: nodeMap{
+							"g": node{typ: typeObject},
+						},
+					},
 				}},
-			}},
-			Node{key: "b", typ: typeObject},
-		}},
-		Node{key: "c", typ: typeObject},
+			},
+		},
+		"c": node{typ: typeObject},
 	},
 }
 
@@ -43,7 +49,7 @@ type CompilerSuite struct {
 }
 
 func (s *CompilerSuite) TestCompileEmptyString() {
-	_, err := Compile("")
+	_, err := compile("")
 	s.Error(err, ErrEmptyString)
 }
 
