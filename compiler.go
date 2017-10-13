@@ -20,7 +20,6 @@ const keyAny = "*"
 
 // node represents a grammar node.
 type node struct {
-	key   string
 	typ   valueType
 	props nodeMap
 }
@@ -73,28 +72,35 @@ func scan(text []rune) []token {
 }
 
 func parse(tokens []token) nodeMap {
-	return buildTree(tokens, token{}, []token{})
+	return buildTree(&tokens, &token{}, &[]token{})
 }
 
-func buildTree(tokens []token, parsent token, stack []token) nodeMap {
+func shiftTokens(tokens *[]token) token {
 	var t token
-	var props nodeMap
+	t, *tokens = (*tokens)[0], (*tokens)[1:]
+
+	return t
+}
+
+func buildTree(tokens *[]token, parent *token, stack *[]token) nodeMap {
+	t, props := token{}, nodeMap{}
 
 	for {
-		if len(tokens) == 0 {
+		if len(*tokens) == 0 {
 			break
 		}
 
-		t, tokens = tokens[0], tokens[1:]
+		t = (*tokens)[0]
+		*tokens = (*tokens)[1:]
 
 		if t.tag == "_n" {
 			t.typ = typeObject
-			t.props = buildTree(tokens, t, stack)
+			t.props = buildTree(tokens, &t, stack)
 
-			if len(stack) != 0 {
-				peek := stack[len(stack)-1]
+			if len(*stack) != 0 {
+				peek := (*stack)[len(*stack)-1]
 				if peek.tag == "/" {
-					stack = stack[0 : len(stack)-1]
+					*stack = (*stack)[:len(*stack)-1]
 					addToken(t, props)
 					return props
 				}
@@ -102,14 +108,14 @@ func buildTree(tokens []token, parsent token, stack []token) nodeMap {
 		} else if t.tag == "," {
 			return props
 		} else if t.tag == "(" {
-			stack = append(stack, t)
-			parsent.typ = typeArray
+			*stack = append(*stack, t)
+			parent.typ = typeArray
 			continue
 		} else if t.tag == ")" {
-			stack = stack[0 : len(stack)-1]
+			*stack = (*stack)[:len(*stack)-1]
 			return props
 		} else if t.tag == "/" {
-			stack = append(stack, t)
+			*stack = append(*stack, t)
 			continue
 		}
 
