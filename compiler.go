@@ -18,7 +18,6 @@ const (
 
 const keyAny = "*"
 
-// node represents a grammar node.
 type node struct {
 	typ   valueType
 	props nodeMap
@@ -75,15 +74,11 @@ func parse(tokens []token) nodeMap {
 	return buildTree(&tokens, &token{}, &[]token{})
 }
 
-func shiftTokens(tokens *[]token) token {
-	var t token
-	t, *tokens = (*tokens)[0], (*tokens)[1:]
-
-	return t
-}
-
 func buildTree(tokens *[]token, parent *token, stack *[]token) nodeMap {
-	t, props := token{}, nodeMap{}
+	var (
+		t     = token{}
+		props = nodeMap{}
+	)
 
 	for {
 		if len(*tokens) == 0 {
