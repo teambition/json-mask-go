@@ -1,6 +1,7 @@
 package jsonmask
 
 import (
+	"container/list"
 	"reflect"
 )
 
@@ -25,17 +26,32 @@ func filter(obj interface{}, mask nodeMap) (interface{}, error) {
 	}
 }
 
-func filterProps(obj interface{}, mask nodeMap) (interface{}, error) {
+func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 	newFields := make([]reflect.StructField, 0)
 
-	for key, _ := range mask {
+	fieldStack := list.New()
+
+	for key, node := range mask {
 		field, ok := getFiledByJSONKey(obj, key)
 		if !ok {
 			continue
 		}
 
+		listElement := fieldStack.PushBack(field)
+
+		if node.props != nil {
+			subFields, err := filterProps(reflect.ValueOf(obj).FieldByName(field.Name).Interface(), node.props)
+			if err != nil {
+				return nil, err
+			}
+
+			field.Type = reflect.StructOf(subFields)
+		}
+
 		newFields = append(newFields, *field)
+
+		fieldStack.Remove(listElement)
 	}
 
-	return reflect.ValueOf(obj).Convert(reflect.StructOf(newFields)).Interface(), nil
+	return newFields, nil
 }
