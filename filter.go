@@ -2,37 +2,40 @@ package jsonmask
 
 import (
 	"reflect"
-
-	"gopkg.in/oleiade/reflections.v1"
 )
 
-func filter(jsonObj interface{}, compiledMask nodeMap) (interface{}, error) {
-	switch reflect.TypeOf(jsonObj).Kind() {
+type arrayWrapper struct {
+	K interface{} `json:"k"`
+}
+
+func filter(obj interface{}, mask nodeMap) (interface{}, error) {
+	switch reflect.TypeOf(obj).Kind() {
 	case reflect.Slice, reflect.Array:
-		return filterProps(arrayWrapper{K: jsonObj}, nodeMap{"k": node{typ: typeArray, props: compiledMask}})
+		filterdObj, err := filterProps(
+			arrayWrapper{K: obj},
+			nodeMap{"k": node{typ: typeArray, props: mask}},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return reflect.ValueOf(filterdObj).Field(0).Interface(), nil
 	default:
-		return filterProps(jsonObj, compiledMask)
+		return filterProps(obj, mask)
 	}
 }
 
 func filterProps(obj interface{}, mask nodeMap) (interface{}, error) {
-	objFields, err := reflections.Fields(obj)
-	if err != nil {
-		return nil, err
-	}
+	newFields := make([]reflect.StructField, 0)
 
-	for _, fieldName := range objFields {
-		if _, ok := mask[fieldName]; !ok {
-			obj, err = clearJSONTag(obj, fieldName)
-			if err != nil {
-				return nil, err
-			}
+	for key, _ := range mask {
+		field, ok := getFiledByJSONKey(obj, key)
+		if !ok {
+			continue
 		}
+
+		newFields = append(newFields, *field)
 	}
 
-	return nil, nil
-}
-
-type arrayWrapper struct {
-	K interface{} `json:"k"`
+	return reflect.ValueOf(obj).Convert(reflect.StructOf(newFields)).Interface(), nil
 }
