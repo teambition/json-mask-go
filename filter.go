@@ -1,9 +1,6 @@
 package jsonmask
 
-import (
-	"container/list"
-	"reflect"
-)
+import "reflect"
 
 type arrayWrapper struct {
 	K interface{} `json:"k"`
@@ -29,28 +26,39 @@ func filter(obj interface{}, mask nodeMap) (interface{}, error) {
 func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 	newFields := make([]reflect.StructField, 0)
 
-	fieldStack := list.New()
-
 	for key, node := range mask {
 		field, ok := getFiledByJSONKey(obj, key)
 		if !ok {
 			continue
 		}
 
-		listElement := fieldStack.PushBack(field)
-
+		var value interface{}
 		if node.props != nil {
-			subFields, err := filterProps(reflect.ValueOf(obj).FieldByName(field.Name).Interface(), node.props)
+			switch field.Type.Kind() {
+			case reflect.Slice, reflect.Array:
+				if field.Type.Len() == 0 {
+					continue
+				}
+
+				value = reflect.ValueOf(obj).FieldByName(field.Name).Index(0).Interface()
+			default:
+				value = reflect.ValueOf(obj).FieldByName(field.Name).Interface()
+			}
+
+			subFields, err := filterProps(value, node.props)
 			if err != nil {
 				return nil, err
 			}
 
-			field.Type = reflect.StructOf(subFields)
+			switch field.Type.Kind() {
+			case reflect.Slice, reflect.Array:
+				field.Type = reflect.SliceOf(reflect.StructOf(subFields))
+			default:
+				field.Type = reflect.StructOf(subFields)
+			}
 		}
 
 		newFields = append(newFields, *field)
-
-		fieldStack.Remove(listElement)
 	}
 
 	return newFields, nil
