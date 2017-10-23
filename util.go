@@ -4,25 +4,16 @@ import (
 	"reflect"
 )
 
-func checkIsArray(obj interface{}) bool {
-	switch reflect.TypeOf(obj).Kind() {
-	case reflect.Slice, reflect.Array:
-		return true
-	default:
-		return false
-	}
-}
-
-func getFiledByJSONKey(obj interface{}, jsonKey string) (*reflect.StructField, bool) {
+func getFiledByJSONKey(obj interface{}, jsonKey string) (*reflect.StructField, int, bool) {
 	objType := reflect.TypeOf(obj)
 	for i := 0; i < objType.NumField(); i++ {
 		field := objType.Field(i)
 		if field.Tag.Get("json") == jsonKey {
-			return &field, true
+			return &field, i, true
 		}
 	}
 
-	return nil, false
+	return nil, 0, false
 }
 
 func stringsContains(strings []string, s string) bool {

@@ -13,8 +13,8 @@ type FilterSuite struct {
 
 type testStruct struct {
 	A int    `json:"a"`
-	C int    `json:"c"`
 	N string `json:"n"`
+	C int    `json:"c"`
 	G string `json:"g"`
 }
 

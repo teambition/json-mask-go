@@ -36,12 +36,11 @@ func filter(obj interface{}, mask nodeMap) (interface{}, error) {
 }
 
 func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
-	newFields := make([]reflect.StructField, 0)
 	objType := reflect.TypeOf(obj)
-	newStructNames := make([]string, 0)
+	newFields := make([]reflect.StructField, objType.NumField())
 
 	for key, node := range mask {
-		field, ok := getFiledByJSONKey(obj, key)
+		field, pos, ok := getFiledByJSONKey(obj, key)
 		if !ok {
 			continue
 		}
@@ -74,14 +73,12 @@ func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 			}
 		}
 
-		newFields = append(newFields, *field)
-		newStructNames = append(newStructNames, field.Name)
+		newFields[pos] = *field
 	}
 
 	for i := 0; i < objType.NumField(); i++ {
 		field := objType.Field(i)
-
-		if stringsContains(newStructNames, field.Name) {
+		if newFields[i].Name != "" {
 			continue
 		}
 
@@ -102,7 +99,7 @@ func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 
 		field.Tag = reflect.StructTag(structTags.String())
 
-		newFields = append(newFields, field)
+		newFields[i] = field
 	}
 
 	return newFields, nil
