@@ -11,8 +11,10 @@ type arrayWrapper struct {
 }
 
 func filter(obj interface{}, mask nodeMap) (interface{}, error) {
-	var newStructFileds []reflect.StructField
-	var err error
+	var (
+		newStructFileds []reflect.StructField
+		err             error
+	)
 
 	switch reflect.TypeOf(obj).Kind() {
 	case reflect.Slice, reflect.Array:
@@ -45,7 +47,6 @@ func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 			continue
 		}
 
-		var value interface{}
 		if node.props != nil && len(node.props) != 0 {
 			switch field.Type.Kind() {
 			case reflect.Slice, reflect.Array:
@@ -55,20 +56,22 @@ func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 					continue
 				}
 
-				value = sliceValue.Index(0).Interface()
-			default:
-				value = reflect.ValueOf(obj).FieldByName(field.Name).Interface()
-			}
+				subFields, err := filterProps(sliceValue.Index(0).Interface(), node.props)
+				if err != nil {
+					return nil, err
+				}
 
-			subFields, err := filterProps(value, node.props)
-			if err != nil {
-				return nil, err
-			}
+				subStruct := reflect.StructOf(subFields)
 
-			switch field.Type.Kind() {
-			case reflect.Slice, reflect.Array:
-				field.Type = reflect.SliceOf(reflect.StructOf(subFields))
+				subSliceStruct := reflect.SliceOf(subStruct)
+
+				field.Type = reflect.SliceOf(subSliceStruct)
 			default:
+				subFields, err := filterProps(reflect.ValueOf(obj).FieldByName(field.Name).Interface(), node.props)
+				if err != nil {
+					return nil, err
+				}
+
 				field.Type = reflect.StructOf(subFields)
 			}
 		}
@@ -78,6 +81,7 @@ func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 
 	for i := 0; i < objType.NumField(); i++ {
 		field := objType.Field(i)
+
 		if newFields[i].Name != "" {
 			continue
 		}
@@ -91,6 +95,7 @@ func filterProps(obj interface{}, mask nodeMap) ([]reflect.StructField, error) {
 		if err != nil {
 			continue // "json" tag does not exist
 		}
+
 		jsonTag.Name = "-"
 
 		if err := structTags.Set(jsonTag); err != nil {
