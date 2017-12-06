@@ -2,7 +2,6 @@ package jsonmask
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -60,7 +59,6 @@ func (s *FilterSuite) TestFilterSimpleObject() {
 func (s *FilterSuite) TestFilterComplexObject() {
 	mask := nodeMap{
 		"a": node{typ: typeObject, props: nodeMap{}},
-		"c": node{typ: typeObject, props: nodeMap{}},
 		"b": node{typ: typeArray, props: nodeMap{
 			"d": node{typ: typeObject, props: nodeMap{
 				keyAny: node{typ: typeObject, props: nodeMap{
@@ -93,7 +91,7 @@ func (s *FilterSuite) TestFilterComplexObject() {
 	j, err := json.Marshal(res)
 	s.Nil(err)
 
-	fmt.Println("json: ", j)
+	s.Equal(string(j), `{"a":11,"b":[{"d":{"g":{"z":22},"b":34,"c":{"a":32}},"b":[{"z":33}],"k":99}]}`)
 }
 
 func TestFilter(t *testing.T) {
