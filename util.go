@@ -15,13 +15,3 @@ func getFiledByJSONKey(obj interface{}, jsonKey string) (*reflect.StructField, i
 
 	return nil, 0, false
 }
-
-func stringsContains(strings []string, s string) bool {
-	for _, str := range strings {
-		if s == str {
-			return true
-		}
-	}
-
-	return false
-}
