@@ -16,7 +16,7 @@ func filter(obj interface{}, mask nodeMap) (interface{}, error) {
 		filtered := make([]map[string]interface{}, 0)
 
 		for i := 0; i < reflect.ValueOf(obj).Len(); i++ {
-			val, err := filterProps(reflect.ValueOf(obj).Index(i), mask)
+			val, err := filterProps(reflect.ValueOf(obj).Index(i).Interface(), mask)
 			if err != nil {
 				return nil, err
 			}
@@ -38,7 +38,7 @@ func filterProps(obj interface{}, mask nodeMap) (map[string]interface{}, error) 
 	filteredMap := make(map[string]interface{})
 
 	for key := range mask {
-		field, _, ok := getFiledByJSONKey(obj, key)
+		field, ok := getFiledByJSONKey(obj, key)
 		if !ok {
 			continue
 		}
