@@ -6,21 +6,19 @@ import (
 	"gopkg.in/oleiade/reflections.v1"
 )
 
-type arrayWrapper struct {
-	K interface{} `json:"k"`
-}
-
 func filter(obj interface{}, mask nodeMap) (interface{}, error) {
 	switch reflect.TypeOf(obj).Kind() {
 	case reflect.Slice, reflect.Array:
-		filtered := make([]map[string]interface{}, 0)
+		len := reflect.ValueOf(obj).Len()
+		filtered := make([]map[string]interface{}, len)
 
-		for i := 0; i < reflect.ValueOf(obj).Len(); i++ {
+		for i := 0; i < len; i++ {
 			val, err := filterProps(reflect.ValueOf(obj).Index(i).Interface(), mask)
 			if err != nil {
 				return nil, err
 			}
-			filtered = append(filtered, val)
+
+			filtered[i] = val
 		}
 
 		return filtered, nil
