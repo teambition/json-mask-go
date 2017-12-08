@@ -145,6 +145,59 @@ func (s *FilterSuite) TestFilterComplexObjectArray() {
 	s.Equal(string(j), `[{"a":11,"b":[{"d":{"g":{"z":22},"b":34,"c":{"a":32}},"b":[{"z":33}],"k":99}]},{"a":11,"b":[{"d":{"g":{"z":22},"b":34,"c":{"a":32}},"b":[{"z":33}],"k":99}]}]`)
 }
 
+func (s *FilterSuite) TestFilterMap() {
+	mask := nodeMap{"a": node{typ: typeObject, props: nodeMap{}}}
+
+	obj := map[string]interface{}{
+		"a": testStruct{
+			A: 11,
+			N: "nn",
+			C: 44,
+			G: "gg",
+			B: []bInner{
+				bInner{
+					K: 99,
+					B: []gInner{gInner{Z: 33}},
+					D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+				},
+			},
+		},
+		"b": testStruct{
+			A: 11,
+			N: "nn",
+			C: 44,
+			G: "gg",
+			B: []bInner{
+				bInner{
+					K: 99,
+					B: []gInner{gInner{Z: 33}},
+					D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+				},
+			},
+		},
+		"c": testStruct{
+			A: 11,
+			N: "nn",
+			C: 44,
+			G: "gg",
+			B: []bInner{
+				bInner{
+					K: 99,
+					B: []gInner{gInner{Z: 33}},
+					D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+				},
+			},
+		},
+	}
+
+	res, err := filter(obj, mask)
+	s.Nil(err)
+
+	j, err := json.Marshal(res)
+	s.Nil(err)
+	s.Equal(string(j), `{"a":{"a":11,"n":"nn","b":[{"d":{"g":{"z":22},"b":34,"c":{"a":32}},"b":[{"z":33}],"k":99}],"c":44,"g":"gg"}}`)
+}
+
 func TestFilter(t *testing.T) {
 	suite.Run(t, new(FilterSuite))
 }
