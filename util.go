@@ -15,3 +15,17 @@ func getFiledByJSONKey(obj interface{}, jsonKey string) (*reflect.StructField, b
 
 	return nil, false
 }
+
+func containsMapKey(sli []reflect.Value, s string) *reflect.Value {
+	for _, sliItem := range sli {
+		if sliItem.Kind() != reflect.String {
+			continue
+		}
+
+		if sliItem.Interface().(string) == s {
+			return &sliItem
+		}
+	}
+
+	return nil
+}
