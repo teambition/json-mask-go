@@ -4,7 +4,7 @@
 
 JSON mask for Go
 
-> Warning: for now only support filtering top level properties.
+> Warning: for now this package only support filtering top level properties.
 
 ## Installation
 
