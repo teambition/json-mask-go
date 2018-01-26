@@ -59,13 +59,13 @@ func filterMapProps(obj interface{}, mask nodeMap) (map[string]interface{}, erro
 func filterProps(obj interface{}, mask nodeMap) (map[string]interface{}, error) {
 	filteredMap := make(map[string]interface{})
 
-	for key := range mask {
-		field, ok := getFiledByJSONKey(obj, key)
-		if !ok {
-			continue
-		}
+	filedNames, err := getFiledNamesByJSONKeys(obj, getMaskKeys(mask))
+	if err != nil {
+		return nil, err
+	}
 
-		val, err := reflections.GetField(obj, field.Name)
+	for key, filedName := range filedNames {
+		val, err := reflections.GetField(obj, filedName)
 		if err != nil {
 			return nil, err
 		}

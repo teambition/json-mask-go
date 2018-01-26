@@ -11,6 +11,23 @@ type FilterSuite struct {
 	suite.Suite
 }
 
+type anonymousStruct struct {
+	*BInner
+	DInner
+}
+
+type BInner struct {
+	D dInner   `json:"d"`
+	B []gInner `json:"b"`
+	K int      `json:"k"`
+}
+
+type DInner struct {
+	G gInner `json:"g"`
+	B int    `json:"b"`
+	C cInner `json:"c"`
+}
+
 type bInner struct {
 	D dInner   `json:"d"`
 	B []gInner `json:"b"`
