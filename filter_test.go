@@ -29,7 +29,7 @@ type DInner struct {
 }
 
 type bInner struct {
-	D dInner   `json:"d"`
+	D *dInner  `json:"d"`
 	B []gInner `json:"b"`
 	K int      `json:"k"`
 }
@@ -50,7 +50,7 @@ type cInner struct {
 
 type testStruct struct {
 	A int      `json:"a"`
-	N string   `json:"n"`
+	N *string  `json:"n"`
 	B []bInner `json:"b"`
 	C int      `json:"c"`
 	G string   `json:"g"`
@@ -64,7 +64,7 @@ func (s *FilterSuite) TestFilterSimpleObject() {
 
 	s.NotNil(mask)
 
-	res, err := filter(testStruct{A: 11, N: "nnn", C: 44, G: "ggg"}, mask)
+	res, err := filter(testStruct{A: 11, N: getStringPointer("nnn"), C: 44, G: "ggg"}, mask)
 	s.Nil(err)
 
 	j, err := json.Marshal(res)
@@ -90,14 +90,14 @@ func (s *FilterSuite) TestFilterComplexObject() {
 
 	obj := testStruct{
 		A: 11,
-		N: "nn",
+		N: getStringPointer("nn"),
 		C: 44,
 		G: "gg",
 		B: []bInner{
 			bInner{
 				K: 99,
 				B: []gInner{gInner{Z: 33}},
-				D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+				D: &dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
 			},
 		},
 	}
@@ -128,27 +128,27 @@ func (s *FilterSuite) TestFilterComplexObjectArray() {
 
 	obj := []testStruct{testStruct{
 		A: 11,
-		N: "nn",
+		N: getStringPointer("nn"),
 		C: 44,
 		G: "gg",
 		B: []bInner{
 			bInner{
 				K: 99,
 				B: []gInner{gInner{Z: 33}},
-				D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+				D: &dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
 			},
 		},
 	},
 		testStruct{
 			A: 11,
-			N: "nn",
+			N: getStringPointer("nn"),
 			C: 44,
 			G: "gg",
 			B: []bInner{
 				bInner{
 					K: 99,
 					B: []gInner{gInner{Z: 33}},
-					D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+					D: &dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
 				},
 			},
 		}}
@@ -168,40 +168,40 @@ func (s *FilterSuite) TestFilterMap() {
 	obj := map[string]interface{}{
 		"a": testStruct{
 			A: 11,
-			N: "nn",
+			N: getStringPointer("nn"),
 			C: 44,
 			G: "gg",
 			B: []bInner{
 				bInner{
 					K: 99,
 					B: []gInner{gInner{Z: 33}},
-					D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+					D: &dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
 				},
 			},
 		},
 		"b": testStruct{
 			A: 11,
-			N: "nn",
+			N: getStringPointer("nn"),
 			C: 44,
 			G: "gg",
 			B: []bInner{
 				bInner{
 					K: 99,
 					B: []gInner{gInner{Z: 33}},
-					D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+					D: &dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
 				},
 			},
 		},
 		"c": testStruct{
 			A: 11,
-			N: "nn",
+			N: getStringPointer("nn"),
 			C: 44,
 			G: "gg",
 			B: []bInner{
 				bInner{
 					K: 99,
 					B: []gInner{gInner{Z: 33}},
-					D: dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
+					D: &dInner{G: gInner{Z: 22}, B: 34, C: cInner{A: 32}},
 				},
 			},
 		},
@@ -217,4 +217,8 @@ func (s *FilterSuite) TestFilterMap() {
 
 func TestFilter(t *testing.T) {
 	suite.Run(t, new(FilterSuite))
+}
+
+func getStringPointer(s string) *string {
+	return &s
 }

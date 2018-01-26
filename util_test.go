@@ -11,7 +11,7 @@ type UtilSuite struct {
 }
 
 func (s *UtilSuite) TestgetFiledNamesByJSONKeys() {
-	fieldNames, err := getFiledNamesByJSONKeys(testStruct{A: 11, N: "nnn", C: 44, G: "ggg"}, []string{"a", "n", "fff"})
+	fieldNames, err := getFiledNamesByJSONKeys(testStruct{A: 11, N: getStringPointer("nnn"), C: 44, G: "ggg"}, []string{"a", "n", "fff"})
 
 	s.Nil(err)
 	s.Len(fieldNames, 2)
