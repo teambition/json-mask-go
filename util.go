@@ -2,19 +2,36 @@ package jsonmask
 
 import (
 	"reflect"
+	"sync"
 
 	"gopkg.in/oleiade/reflections.v1"
 )
 
-func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]string, error) {
-	fieldNames := make(map[string]string)
+var (
+	structTagCache = sync.Map{}
+)
 
-	m, err := reflections.TagsDeep(obj, "json")
-	if err != nil {
-		return nil, err
+func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]string, error) {
+	var (
+		fieldNames  = make(map[string]string)
+		structName  = reflect.TypeOf(obj).Name()
+		fieldTagMap = map[string]string{}
+		err         error
+	)
+
+	cache, ok := structTagCache.Load(structName)
+	if !ok {
+		fieldTagMap, err = reflections.TagsDeep(obj, "json")
+		if err != nil {
+			return nil, err
+		}
+
+		structTagCache.Store(structName, fieldTagMap)
+	} else {
+		fieldTagMap = cache.(map[string]string)
 	}
 
-	for fieldName, key := range m {
+	for fieldName, key := range fieldTagMap {
 		for _, jsonKey := range jsonKeys {
 			if key == jsonKey {
 				fieldNames[jsonKey] = fieldName
