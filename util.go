@@ -14,8 +14,8 @@ var (
 func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]string, error) {
 	var (
 		fieldNames  = make(map[string]string)
-		structName  = reflect.TypeOf(obj).Name()
-		fieldTagMap = map[string]string{}
+		fieldTagMap = make(map[string]string)
+		structName  = reflect.TypeOf(obj).String()
 		err         error
 	)
 
