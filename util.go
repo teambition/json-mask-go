@@ -2,6 +2,7 @@ package jsonmask
 
 import (
 	"reflect"
+	"strings"
 	"sync"
 
 	"gopkg.in/oleiade/reflections.v1"
@@ -32,6 +33,11 @@ func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]str
 	}
 
 	for fieldName, key := range fieldTagMap {
+		keys := strings.Split(key, ",")
+		if len(keys) == 0 {
+			continue
+		}
+		key := keys[0]
 		for _, jsonKey := range jsonKeys {
 			if key == jsonKey {
 				fieldNames[jsonKey] = fieldName
