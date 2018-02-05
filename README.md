@@ -9,12 +9,12 @@ JSON mask for Go
 ## Installation
 
 ```
-go get -u github.com/DavidCai1993/json-mask-go
+go get -u github.com/teambition/json-mask-go
 ```
 
 ## Documentation
 
-API documentation can be found here: https://godoc.org/github.com/DavidCai1993/json-mask-go
+API documentation can be found here: https://godoc.org/github.com/teambition/json-mask-go
 
 
 ## Usage
