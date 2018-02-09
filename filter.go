@@ -6,6 +6,7 @@ import (
 	"gopkg.in/oleiade/reflections.v1"
 )
 
+// filter filters the given object according to the mask.
 func filter(obj interface{}, mask nodeMap) (interface{}, error) {
 	switch reflect.TypeOf(obj).Kind() {
 	case reflect.Slice, reflect.Array:
@@ -40,9 +41,11 @@ func filter(obj interface{}, mask nodeMap) (interface{}, error) {
 }
 
 func filterMapProps(obj interface{}, mask nodeMap) (map[string]interface{}, error) {
-	filteredMap := make(map[string]interface{})
-	objValue := reflect.ValueOf(obj)
-	mapKeys := objValue.MapKeys()
+	var (
+		filteredMap = make(map[string]interface{})
+		objValue    = reflect.ValueOf(obj)
+		mapKeys     = objValue.MapKeys()
+	)
 
 	for key := range mask {
 		keyValue := containsMapKey(mapKeys, key)

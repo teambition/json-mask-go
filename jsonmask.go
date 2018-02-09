@@ -6,6 +6,7 @@ import (
 
 // Mask selects the specific parts of an object, according to the "mask".
 func Mask(obj interface{}, mask string) (res interface{}, err error) {
+	// catch the panic from reflections
 	defer func() {
 		if r := recover(); err != nil {
 			res = obj

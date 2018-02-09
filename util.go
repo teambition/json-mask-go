@@ -12,6 +12,7 @@ var (
 	structTagCache = sync.Map{}
 )
 
+// getFiledNamesByJSONKeys gets the map of key and JSON tag of the given struct.
 func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]string, error) {
 	var (
 		fieldNames  = make(map[string]string)
@@ -20,6 +21,7 @@ func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]str
 		err         error
 	)
 
+	// try to load from cache at first
 	cache, ok := structTagCache.Load(structName)
 	if !ok {
 		fieldTagMap, err = reflections.TagsDeep(obj, "json")
@@ -33,6 +35,8 @@ func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]str
 	}
 
 	for fieldName, key := range fieldTagMap {
+		// ignore the content after first ','
+		// example: `json: "_id,omitempty"`
 		keys := strings.Split(key, ",")
 		if len(keys) == 0 {
 			continue
@@ -49,6 +53,7 @@ func getFiledNamesByJSONKeys(obj interface{}, jsonKeys []string) (map[string]str
 	return fieldNames, nil
 }
 
+// getMaskKeys returns all keys in the nodeMap.
 func getMaskKeys(mask nodeMap) []string {
 	keys := make([]string, 0)
 
@@ -59,6 +64,7 @@ func getMaskKeys(mask nodeMap) []string {
 	return keys
 }
 
+// containsMapKey checks whether the given key exists in the given map.
 func containsMapKey(sli []reflect.Value, s string) *reflect.Value {
 	for _, sliItem := range sli {
 		if sliItem.Kind() != reflect.String {

@@ -31,6 +31,10 @@ type token struct {
 
 type nodeMap map[string]node
 
+// compile compiles the fieldmask text (example: 'a,b.c') to
+// the nodeMap sturct.
+// For more information:
+// https://developers.google.com/discovery/v1/performance#partial-response
 func compile(text string) (nodeMap, error) {
 	if text == "" {
 		return nil, errors.WithStack(ErrEmptyString)
