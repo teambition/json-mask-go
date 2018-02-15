@@ -9,5 +9,5 @@ before_install:
   - go get github.com/mattn/goveralls
 
 script:
-  - go test -coverprofile=json-mask.coverprofile
+  - go test -coverprofile=json-mask.coverprofile --race
   - goveralls -coverprofile=json-mask.coverprofile -service=travis-ci
