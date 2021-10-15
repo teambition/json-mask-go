@@ -1,4 +1,4 @@
-package jsonmask_test
+package main
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	jsonmask "github.com/teambition/json-mask-go"
 )
 
-func Example_mask() {
+func main() {
 	doc := `
 	{
 		"kind": "demo",
@@ -35,9 +35,8 @@ func Example_mask() {
 	}
 	`
 
-	result, _ := jsonmask.Mask([]byte(doc), "kind,items(title,characteristics/length)")
+	result, err := jsonmask.Mask([]byte(doc), "kind,items(title,characteristics/length)")
 
-	fmt.Println(string(result))
-	// Output:
-	// {"items":[{"characteristics":{"length":"short"},"title":"First title"},{"characteristics":{"length":"long"},"title":"Second title"}],"kind":"demo"}
+	fmt.Println("json output: ", err, string(result))
+	// json output:  {"a":"aaa","c":{"c1":12,"c2":33}}
 }
