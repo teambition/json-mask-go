@@ -35,7 +35,8 @@ func main() {
 	}
 	`
 
-	result, err := jsonmask.Mask([]byte(doc), "kind,items(title,characteristics/length)")
+	sl, err := jsonmask.Compile("kind,items(title,characteristics/length)")
+	result, err := sl.Mask([]byte(doc))
 
 	fmt.Println("json output: ", err, string(result))
 	// json output:  {"a":"aaa","c":{"c1":12,"c2":33}}

@@ -6,10 +6,10 @@ import (
 	"unicode/utf8"
 )
 
-type selection map[string]selection
+type Selection map[string]Selection
 
 // used for testing purposes
-func (s selection) equal(other selection) bool {
+func (s Selection) equal(other Selection) bool {
 	if other == nil {
 		return false
 	}
@@ -33,7 +33,7 @@ func (s selection) equal(other selection) bool {
 // a/*/c   the star * wildcard will select all items in a field
 // a,b/c(d,e(f,g/h)),i
 //
-func compile(str string) (selection, error) {
+func Compile(str string) (Selection, error) {
 	if !utf8.ValidString(str) {
 		return nil, fmt.Errorf("invalid fields")
 	}
@@ -101,17 +101,17 @@ func compile(str string) (selection, error) {
 		return nil, fmt.Errorf("invalid end")
 	}
 
-	node := make(selection)
+	node := make(Selection)
 	err := buildSelection(tokens, node)
 	return node, err
 }
 
-func buildSelection(tokens []string, root selection) error {
+func buildSelection(tokens []string, root Selection) error {
 	if len(tokens) == 0 {
 		return nil
 	}
 
-	var child selection
+	var child Selection
 	node := root
 	for i := 0; i < len(tokens); i++ {
 		switch tokens[i] {
@@ -131,7 +131,7 @@ func buildSelection(tokens []string, root selection) error {
 		case ")":
 			return fmt.Errorf("invalid field char: ')'")
 		default:
-			child = make(selection)
+			child = make(Selection)
 			node[tokens[i]] = child
 		}
 	}

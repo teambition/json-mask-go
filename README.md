@@ -57,6 +57,9 @@ doc := `
 `
 
 result, _ := jsonmask.Mask([]byte(doc), "kind,items(title,characteristics/length)")
+// OR:
+// selection, err := jsonmask.Compile("kind,items(title,characteristics/length)")
+// result, err := selection.Mask([]byte(doc))
 fmt.Println(string(result))
 // Output:
 // {"items":[{"characteristics":{"length":"short"},"title":"First title"},{"characteristics":{"length":"long"},"title":"Second title"}],"kind":"demo"}

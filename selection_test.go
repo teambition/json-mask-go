@@ -5,7 +5,7 @@ import "testing"
 type selectionCase struct {
 	fields    string
 	shouldErr bool
-	res       selection
+	res       Selection
 }
 
 // a       select a field 'a'
@@ -82,62 +82,62 @@ var selectionCases = []selectionCase{
 	{
 		fields:    "a",
 		shouldErr: false,
-		res:       selection{"a": selection{}},
+		res:       Selection{"a": Selection{}},
 	},
 	{
 		fields:    "*",
 		shouldErr: false,
-		res:       selection{"*": selection{}},
+		res:       Selection{"*": Selection{}},
 	},
 	{
 		fields:    "a,b,c",
 		shouldErr: false,
-		res: selection{
-			"a": selection{},
-			"b": selection{},
-			"c": selection{},
+		res: Selection{
+			"a": Selection{},
+			"b": Selection{},
+			"c": Selection{},
 		},
 	},
 	{
 		fields:    "a/b/c",
 		shouldErr: false,
-		res:       selection{"a": selection{"b": selection{"c": selection{}}}},
+		res:       Selection{"a": Selection{"b": Selection{"c": Selection{}}}},
 	},
 	{
 		fields:    "a(b,c)",
 		shouldErr: false,
-		res:       selection{"a": selection{"b": selection{}, "c": selection{}}},
+		res:       Selection{"a": Selection{"b": Selection{}, "c": Selection{}}},
 	},
 	{
 		fields:    "a(b(c))",
 		shouldErr: false,
-		res:       selection{"a": selection{"b": selection{"c": selection{}}}},
+		res:       Selection{"a": Selection{"b": Selection{"c": Selection{}}}},
 	},
 	{
 		fields:    "a/*/c",
 		shouldErr: false,
-		res:       selection{"a": selection{"*": selection{"c": selection{}}}},
+		res:       Selection{"a": Selection{"*": Selection{"c": Selection{}}}},
 	},
 	{
 		fields:    "a,b/c(d,e(f,g/h)),i",
 		shouldErr: false,
-		res: selection{
-			"a": selection{},
-			"b": selection{"c": selection{
-				"d": selection{},
-				"e": selection{
-					"f": selection{},
-					"g": selection{"h": selection{}},
+		res: Selection{
+			"a": Selection{},
+			"b": Selection{"c": Selection{
+				"d": Selection{},
+				"e": Selection{
+					"f": Selection{},
+					"g": Selection{"h": Selection{}},
 				},
 			}},
-			"i": selection{},
+			"i": Selection{},
 		},
 	},
 }
 
 func TestCompile(t *testing.T) {
 	for _, c := range selectionCases {
-		res, err := compile(c.fields)
+		res, err := Compile(c.fields)
 		if c.shouldErr {
 			if err == nil {
 				t.Errorf("Testing case[%s] failed: should error but got: %#v", c.fields, res)

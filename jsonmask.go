@@ -20,10 +20,15 @@ func Mask(doc []byte, fields string) ([]byte, error) {
 	if !json.Valid(doc) {
 		return nil, fmt.Errorf("invalid json string")
 	}
-	sl, err := compile(fields)
+	sl, err := Compile(fields)
 	if err != nil {
 		return nil, err
 	}
+
+	return sl.Mask(doc)
+}
+
+func (sl Selection) Mask(doc []byte) ([]byte, error) {
 	if len(doc) == 0 || len(sl) == 0 {
 		return doc, nil
 	}
@@ -198,7 +203,7 @@ func checkWhich(buf []byte) int {
 	return eOther
 }
 
-func copyLazyNode(dst, src *lazyNode, sl selection) error {
+func copyLazyNode(dst, src *lazyNode, sl Selection) error {
 	err := src.unmarshal()
 	if err != nil {
 		return err
