@@ -1,6 +1,7 @@
 package jsonmask
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -16,6 +17,9 @@ var jsonNull = []byte("null")
 
 // Mask selects the specific parts of an JSON string, according to the mask "fields".
 func Mask(doc []byte, fields string) ([]byte, error) {
+	if !json.Valid(doc) {
+		return nil, fmt.Errorf("invalid json string")
+	}
 	sl, err := compile(fields)
 	if err != nil {
 		return nil, err
@@ -33,8 +37,15 @@ func Mask(doc []byte, fields string) ([]byte, error) {
 	return json.Marshal(dst)
 }
 
+// for testing purposes only.
+func jsonDeepEqual(a, b []byte) bool {
+	rawa := json.RawMessage(a)
+	rawb := json.RawMessage(b)
+	return newLazyNode(&rawa).deepEqual(newLazyNode(&rawb))
+}
+
 func newLazyNode(raw *json.RawMessage) *lazyNode {
-	return &lazyNode{raw: raw, obj: nil, ary: nil, which: eRaw}
+	return &lazyNode{raw: raw}
 }
 
 type lazyNode struct {
@@ -59,14 +70,17 @@ func (n *lazyNode) MarshalJSON() ([]byte, error) {
 }
 
 func (n *lazyNode) UnmarshalJSON(data []byte) error {
-	dest := make(json.RawMessage, len(data))
-	copy(dest, data)
+	dest := json.RawMessage(data)
 	n.raw = &dest
 	n.which = eRaw
 	return nil
 }
 
 func (n *lazyNode) unmarshal() error {
+	if n.which != eRaw {
+		return nil
+	}
+
 	n.which = eOther
 	if n.raw == nil {
 		return nil
@@ -88,10 +102,75 @@ func (n *lazyNode) unmarshal() error {
 	return nil
 }
 
+// for testing purposes only.
+func (n *lazyNode) deepEqual(other *lazyNode) bool {
+	if err := n.unmarshal(); err != nil {
+		return false
+	}
+	if err := other.unmarshal(); err != nil {
+		return false
+	}
+	if n.which != other.which {
+		return false
+	}
+	switch n.which {
+	case eObj:
+		return n.obj.deepEqual(other.obj)
+	case eAry:
+		if other.ary == nil {
+			return false
+		}
+		if len(n.ary) != len(other.ary) {
+			return false
+		}
+		for i, v := range n.ary {
+			if !v.deepEqual(other.ary[i]) {
+				return false
+			}
+		}
+		return true
+	}
+
+	if n.raw == nil {
+		return other.raw == nil
+	}
+	if other.raw == nil {
+		return false
+	}
+	var nb, otherb bytes.Buffer
+	if err := json.Compact(&nb, *n.raw); err != nil {
+		return false
+	}
+	if err := json.Compact(&otherb, *other.raw); err != nil {
+		return false
+	}
+	return bytes.Equal(nb.Bytes(), otherb.Bytes())
+}
+
 type partialArray []*lazyNode
 
 type partialObj struct {
 	obj map[string]*lazyNode
+}
+
+// for testing purposes only.
+func (n *partialObj) deepEqual(other *partialObj) bool {
+	if other == nil {
+		return false
+	}
+	if len(n.obj) != len(other.obj) {
+		return false
+	}
+	for k, v := range n.obj {
+		ov, ok := other.obj[k]
+		if !ok {
+			return false
+		}
+		if !v.deepEqual(ov) {
+			return false
+		}
+	}
+	return true
 }
 
 func (n *partialObj) MarshalJSON() ([]byte, error) {
@@ -155,7 +234,7 @@ func copyLazyNode(dst, src *lazyNode, sl selection) error {
 			return nil
 		}
 
-		dst.ary = make([]*lazyNode, len(sl))
+		dst.ary = make([]*lazyNode, len(src.ary))
 		for i := range src.ary {
 			dst.ary[i] = newLazyNode(nil)
 			if err := copyLazyNode(dst.ary[i], src.ary[i], sl); err != nil {
