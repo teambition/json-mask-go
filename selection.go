@@ -1,6 +1,7 @@
 package jsonmask
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"unicode/utf8"
@@ -32,7 +33,6 @@ func (s Selection) equal(other Selection) bool {
 // a(b,c)  sub-selection will select many fields from a parent
 // a/*/c   the star * wildcard will select all items in a field
 // a,b/c(d,e(f,g/h)),i
-//
 func Compile(str string) (Selection, error) {
 	if !utf8.ValidString(str) {
 		return nil, fmt.Errorf("invalid fields")
@@ -103,6 +103,7 @@ func Compile(str string) (Selection, error) {
 
 	node := make(Selection)
 	err := buildSelection(tokens, node)
+
 	return node, err
 }
 
@@ -120,7 +121,10 @@ func buildSelection(tokens []string, root Selection) error {
 		case "/":
 			node = child
 		case "(":
-			end := findCloseIndex(tokens, i+1)
+			end, err := findCloseIndex(tokens, i)
+			if err != nil {
+				return err
+			}
 			if end == -1 {
 				return fmt.Errorf("sub-selector not close")
 			}
@@ -138,11 +142,22 @@ func buildSelection(tokens []string, root Selection) error {
 	return nil
 }
 
-func findCloseIndex(tokens []string, start int) int {
-	for i := len(tokens) - 1; i >= start; i-- {
-		if tokens[i] == ")" {
-			return i
+func findCloseIndex(tokens []string, start int) (int, error) {
+	closeIdx := start
+	counter := 1
+	for {
+		if counter == 0 {
+			return closeIdx, nil
+		}
+		closeIdx++
+		if closeIdx > (len(tokens) - 1) {
+			return 0, errors.New("unbalanced parenthesis")
+		}
+		switch tokens[closeIdx] {
+		case "(":
+			counter++
+		case ")":
+			counter--
 		}
 	}
-	return -1
 }
