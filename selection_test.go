@@ -1,6 +1,9 @@
 package jsonmask
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 type selectionCase struct {
 	fields    string
@@ -133,19 +136,92 @@ var selectionCases = []selectionCase{
 			"i": Selection{},
 		},
 	},
+	{
+		fields:    "a,b/c(d(e,f),g(h,i/j)),k",
+		shouldErr: false,
+		res: Selection{
+			"a": Selection{},
+			"b": Selection{"c": Selection{
+				"d": Selection{
+					"e": Selection{},
+					"f": Selection{},
+				},
+				"g": Selection{
+					"h": Selection{},
+					"i": Selection{"j": Selection{}},
+				},
+			}},
+			"k": Selection{},
+		},
+	},
+	{
+		fields:    "a,b/c(d(e,f),g(h,i/j(k,l))),m",
+		shouldErr: false,
+		res: Selection{
+			"a": Selection{},
+			"b": Selection{
+				"c": Selection{
+					"d": Selection{
+						"e": Selection{},
+						"f": Selection{},
+					},
+					"g": Selection{
+						"h": Selection{},
+						"i": Selection{"j": Selection{
+							"k": Selection{},
+							"l": Selection{},
+						}},
+					},
+				},
+			},
+			"m": Selection{},
+		},
+	},
+	{
+		fields:    "a,b/c(d(e,f),g(h,i/j(k(l),m(n,o/p)))),q",
+		shouldErr: false,
+		res: Selection{
+			"a": Selection{},
+			"b": Selection{
+				"c": Selection{
+					"d": Selection{
+						"e": Selection{},
+						"f": Selection{},
+					},
+					"g": Selection{
+						"h": Selection{},
+						"i": Selection{"j": Selection{
+							"k": Selection{
+								"l": Selection{},
+							},
+							"m": Selection{
+								"n": Selection{},
+								"o": Selection{
+									"p": Selection{},
+								},
+							},
+						}},
+					},
+				},
+			},
+			"q": Selection{},
+		},
+	},
 }
 
 func TestCompile(t *testing.T) {
 	for _, c := range selectionCases {
-		res, err := Compile(c.fields)
-		if c.shouldErr {
-			if err == nil {
-				t.Errorf("Testing case[%s] failed: should error but got: %#v", c.fields, res)
+		t.Run(fmt.Sprint("fields=[", c.fields, "]"), func(t *testing.T) {
+			res, err := Compile(c.fields)
+			if c.shouldErr {
+				if err == nil {
+					t.Errorf("Testing case[%s] failed: should error but got: %#v", c.fields, res)
+				}
+			} else if err != nil {
+				t.Errorf("Testing case[%s] failed: %s", c.fields, err)
+			} else if !c.res.equal(res) {
+				t.Errorf("Testing case[%s] failed, expected: %#v, got: %#v", c.fields, c.res, res)
 			}
-		} else if err != nil {
-			t.Errorf("Testing case[%s] failed: %s", c.fields, err)
-		} else if !c.res.equal(res) {
-			t.Errorf("Testing case[%s] failed, expected: %#v, got: %#v", c.fields, c.res, res)
-		}
+		})
 	}
 }
